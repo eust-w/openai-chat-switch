@@ -1,2 +1,1 @@
-# egit
-easy git
+# openai-chat-switch
