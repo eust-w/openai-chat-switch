@@ -1,4 +1,4 @@
-package controller
+package openai_chat_switch
 
 import (
 	"github.com/eust-w/openai-chat-switch/global"
