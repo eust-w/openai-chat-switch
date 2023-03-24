@@ -1,9 +1,14 @@
 package openai_chat_switch
 
 import (
+	"github.com/eust-w/openai-chat-switch/global"
 	"github.com/eust-w/openai-chat-switch/gpt"
 	"strings"
 )
+
+func NewGlobal() *global.Application {
+	return global.App
+}
 
 var AnserFuncSlice map[string]func(a, b string) string = map[string]func(a, b string) string{}
 
