@@ -1,7 +1,6 @@
 package global
 
 import (
-	"github.com/eust-w/openai-chat-switch/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -30,7 +29,7 @@ func InitializeLog() *zap.SugaredLogger {
 }
 
 func createRootDir() {
-	if ok, _ := utils.PathExists(App.Config.Log.RootDir); !ok {
+	if ok, _ := pathExists(App.Config.Log.RootDir); !ok {
 		_ = os.Mkdir(App.Config.Log.RootDir, os.ModePerm)
 	}
 }
@@ -92,4 +91,15 @@ func getLogWriter() zapcore.WriteSyncer {
 	}
 
 	return zapcore.AddSync(file)
+}
+
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }

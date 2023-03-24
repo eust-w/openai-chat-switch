@@ -6,8 +6,8 @@ import (
 )
 
 func init() {
-	AnserFuncSlice["重置"] = reset
-	AnserFuncSlice["报时"] = nowTime
+	ExtensionExactMatchReturnOutcome["重置"] = reset
+	ExtensionExactMatchReturnOutcome["报时"] = nowTime
 }
 
 func reset(prompt, userId string) string {

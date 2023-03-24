@@ -8,7 +8,6 @@ import (
 
 const (
 	context = "context/"
-	mode    = "mode/"
 )
 
 type ChatDb struct {
@@ -36,18 +35,4 @@ func (s *ChatDb) GetContext(userId string) []string {
 // DeleteContext 删除上下文
 func (s *ChatDb) DeleteContext(userId string) {
 	s.db.Delete(context + userId)
-}
-
-// GetMode 获取对话模式
-func (s *ChatDb) GetMode(userId string) string {
-	mode, ok := s.db.Get(mode + userId)
-	if !ok {
-		return ""
-	}
-	return mode.(string)
-}
-
-// SetMode 设置对话模式
-func (s *ChatDb) SetMode(userId string, mode string) {
-	s.db.Set(mode+userId, mode, cache.DefaultExpiration)
 }

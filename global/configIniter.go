@@ -4,52 +4,18 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"os"
 	"sync"
 )
 
 var once sync.Once
-var globleE struct {
-	_tip  string // 提示信息
-	_path string // 配置文件路径
-} = struct {
-	_tip  string
-	_path string
-}{_tip: "", _path: ""}
+var env = "config.json"
 
 func InitializeConfig() {
-	// 配置所有环境
-	// * 添加、修改环境配置文件请在这里进行
-	var env struct {
-		_tip  string // 提示信息
-		_path string // 配置文件路径
-	}
-	if globleE == struct {
-		_tip  string
-		_path string
-	}{_tip: "", _path: ""} {
-		envs := map[string]struct {
-			_tip  string // 提示信息
-			_path string // 配置文件路径
-		}{
-			"dev":  {"正在使用开发环境配置", "config.json"},
-			"prod": {"正在使用生产环境配置", "config.prod.toml"},
-		}
-
-		// 检查环境变量
-		var goEnv string
-		if goEnv = os.Getenv("GO_ENV"); goEnv == "" {
-			goEnv = "dev" // 默认为开发环境
-		}
-		env = envs[goEnv] // 取出对应环境
-	} else {
-		env = globleE
-	}
-	fmt.Println(env._tip)
+	fmt.Println("正在使用配置：", env)
 
 	// 初始化 viper
 	v := viper.New()
-	v.SetConfigFile(env._path)
+	v.SetConfigFile(env)
 	if err := v.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("read config failed: %s \n", err))
 	}
@@ -70,10 +36,9 @@ func InitializeConfig() {
 
 }
 
-func OnceInitializeConfig(e struct {
-	_tip  string // 提示信息
-	_path string // 配置文件路径
-}) {
-	globleE = e
+func OnceInitializeConfig(config string) {
+	if config != "" {
+		env = config
+	}
 	once.Do(InitializeConfig)
 }
