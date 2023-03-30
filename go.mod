@@ -1,6 +1,6 @@
 module github.com/eust-w/openai-chat-switch
 
-go 1.18
+go 1.17
 
 require (
 	github.com/avast/retry-go v2.7.0+incompatible
