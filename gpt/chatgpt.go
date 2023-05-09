@@ -12,9 +12,10 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-var (
-	DefaultAiRole    = "AI"
-	DefaultHumanRole = "Human"
+const (
+	DefaultTemperature = 0.6
+	DefaultAiRole      = "AI"
+	DefaultHumanRole   = "Human"
 )
 
 type ChatGpt struct {
@@ -76,13 +77,30 @@ func (c *ChatGpt) Close() {
 	c.cancel()
 }
 
+func (c ChatGpt) getModel() string {
+	model := global.App.Db.GetModel(c.userId)
+	if model != "" {
+		return model
+	}
+	return global.App.Config.Model
+}
+
+func (c ChatGpt) getTemperature() float32 {
+	temperature := global.App.Db.GetTemperature(c.userId)
+	if temperature != 0 {
+		return temperature
+	}
+	return DefaultTemperature
+}
+
 func (c *ChatGpt) ChatWithContext(prompt string) (answer string, err error) {
 	prompt = prompt + "."
 	promptTable := c.ChatContext
 	subSetPromptTable := GetMaxSubset(promptTable, c.maxPromptLen)
 	realPrompt := fmt.Sprint(strings.Join(subSetPromptTable, "\n")) + "\n\n" + DefaultHumanRole + ":" + prompt + "\n" + DefaultAiRole + ":"
 	global.App.Log.Info("realPrompt is:", len(realPrompt))
-	model := global.App.Config.Model
+	model := c.getModel()
+	temperature := c.getTemperature()
 	if model == openai.GPT3Dot5Turbo0301 ||
 		model == openai.GPT3Dot5Turbo ||
 		model == openai.GPT4 || model == openai.GPT40314 ||
@@ -97,7 +115,7 @@ func (c *ChatGpt) ChatWithContext(prompt string) (answer string, err error) {
 				},
 			},
 			MaxTokens:   3072,
-			Temperature: 0.6,
+			Temperature: temperature,
 			User:        c.userId,
 		}
 		resp, err := c.client.CreateChatCompletion(c.ctx, req)
@@ -114,7 +132,7 @@ func (c *ChatGpt) ChatWithContext(prompt string) (answer string, err error) {
 			Model:       model,
 			MaxTokens:   c.maxansewerLen,
 			Prompt:      realPrompt,
-			Temperature: 0.6,
+			Temperature: temperature,
 			User:        c.userId,
 			Stop:        []string{DefaultAiRole + ":", DefaultHumanRole + ":"},
 		}
