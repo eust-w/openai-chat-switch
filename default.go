@@ -26,7 +26,7 @@ func nowTime(prompt, userId string) string {
 }
 
 func changeModel(prompt, userId string) string {
-	errMessage := "不支持您的模型，支持的模型有"
+	errMessage := "不支持您的模型，支持的模型有gpt3.5、gpt-3.5-turbo-0301、gpt-4、gpt-4-0314"
 	m := strings.Split(prompt, "模型切换到")
 	if len(m) != 2 {
 		return errMessage
@@ -61,7 +61,7 @@ func checkModel(model string) (string, error) {
 }
 
 func changeTemperature(prompt, userId string) string {
-	errMessage := "不支持的性格设置"
+	errMessage := "不支持的性格设置，性格范围为(0,1)"
 	m := strings.Split(prompt, "Temperature切换到")
 	if len(m) != 2 {
 		return errMessage

@@ -72,13 +72,14 @@ func processPrompt(prompt string) (processedPrompt string) {
 	return prompt
 }
 
+//匹配前缀是否相同
 func getFuncFromPrefixMatchMap(m map[string]func(a, b string) string, source string) (func(a, b string) string, bool) {
 	for k, f := range m {
 		keyLen := len(k)
 		if len(source) < keyLen {
 			continue
 		}
-		if source[:keyLen-1] == k {
+		if source[:keyLen] == k {
 			return f, true
 		}
 	}
