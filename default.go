@@ -72,6 +72,7 @@ func changeTemperature(prompt, userId string) string {
 	}
 	if 0 < temperature && temperature < 1 {
 		global.App.Db.SetTemperature(userId, float32(temperature))
+		return fmt.Sprintf("已经帮你你切换Temperature到%v", temperature)
 	}
 	return errMessage
 }
