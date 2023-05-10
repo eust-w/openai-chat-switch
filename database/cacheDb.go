@@ -17,7 +17,7 @@ type ChatDb struct {
 }
 
 func NewChatDb() *ChatDb {
-	return &ChatDb{db: cache.New(time.Hour*1, time.Hour*24*7)}
+	return &ChatDb{db: cache.New(time.Hour*24, time.Hour*24*7)}
 }
 
 // SetContext 设置会话上下文
