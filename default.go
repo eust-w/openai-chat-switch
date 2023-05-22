@@ -10,10 +10,10 @@ import (
 )
 
 func init() {
-	ExtensionExactMatchReturnOutcome["重置"] = reset
-	ExtensionExactMatchReturnOutcome["报时"] = nowTime
-	ExtensionPrefixMatchReturnOutcome["模型切换到"] = changeModel
-	ExtensionPrefixMatchReturnOutcome["Temperature切换到"] = changeTemperature
+	ExtensionExactMatchReturnOutcome.AddFunc("重置", reset)
+	ExtensionExactMatchReturnOutcome.AddFunc("报时", nowTime)
+	ExtensionPrefixMatchReturnOutcome.AddFunc("模型切换到", changeModel)
+	ExtensionPrefixMatchReturnOutcome.AddFunc("Temperature切换到", changeTemperature)
 }
 
 func reset(prompt, userId string) string {

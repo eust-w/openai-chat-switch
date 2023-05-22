@@ -1,16 +1,85 @@
 package openai_chat_switch
 
 import (
+	"fmt"
 	"github.com/eust-w/openai-chat-switch/database"
 	"github.com/eust-w/openai-chat-switch/global"
 	"github.com/eust-w/openai-chat-switch/gpt"
 	"strings"
+	"sync"
 )
 
-var ExtensionExactMatchReturnOutcome map[string]func(a, b string) string = map[string]func(a, b string) string{}
-var ExtensionPrefixMatchReturnOutcome map[string]func(a, b string) string = map[string]func(a, b string) string{}
-var ExtensionExactMatchReturnPrompt map[string]func(a, b string) string = map[string]func(a, b string) string{}
-var ExtensionPrefixMatchReturnPrompt map[string]func(a, b string) string = map[string]func(a, b string) string{}
+type RwMap struct {
+	globalMap map[string]struct{}
+	sync.RWMutex
+}
+
+func (r *RwMap) Get(name string) bool {
+	r.RLock()
+	defer r.RUnlock()
+	_, ok := r.globalMap[name]
+	return ok
+}
+
+func (r *RwMap) Set(name string) bool {
+	if r.Get(name) {
+		return false
+	}
+	r.Lock()
+	defer r.Unlock()
+	r.globalMap[name] = struct{}{}
+	return true
+}
+
+func (r *RwMap) Del(name string) bool {
+	if !r.Get(name) {
+		return false
+	}
+	r.Lock()
+	defer r.Unlock()
+	delete(r.globalMap, name)
+	return true
+}
+
+var globalRwMap = RwMap{globalMap: map[string]struct{}{}}
+
+type extension struct {
+	funcMap map[string]func(a, b string) string
+}
+
+func (e extension) GetFuncs() map[string]func(a, b string) string {
+	return e.funcMap
+}
+
+func (e extension) GetFunc(name string) (func(a, b string) string, bool) {
+	f, ok := e.funcMap[name]
+	return f, ok
+}
+
+func (e extension) AddFunc(name string, function func(a, b string) string) error {
+	if globalRwMap.Set(name) {
+		e.funcMap[name] = function
+		return nil
+	}
+	return fmt.Errorf("add func error")
+}
+
+func (e extension) DelFunc(name string) {
+	if !globalRwMap.Del(name) {
+		global.App.Log.Warnf("del global func name error")
+	}
+	delete(e.funcMap, name)
+}
+
+//var ExtensionExactMatchReturnOutcome map[string]func(a, b string) string = map[string]func(a, b string) string{}
+//var ExtensionPrefixMatchReturnOutcome map[string]func(a, b string) string = map[string]func(a, b string) string{}
+//var ExtensionExactMatchReturnPrompt map[string]func(a, b string) string = map[string]func(a, b string) string{}
+//var ExtensionPrefixMatchReturnPrompt map[string]func(a, b string) string = map[string]func(a, b string) string{}
+
+var ExtensionExactMatchReturnOutcome extension = extension{funcMap: map[string]func(a string, b string) string{}}
+var ExtensionPrefixMatchReturnOutcome = extension{funcMap: map[string]func(a string, b string) string{}}
+var ExtensionExactMatchReturnPrompt = extension{funcMap: map[string]func(a string, b string) string{}}
+var ExtensionPrefixMatchReturnPrompt = extension{funcMap: map[string]func(a string, b string) string{}}
 
 func NewGlobal(config string) *global.Application {
 	global.OnceInitializeConfig(config)
@@ -35,20 +104,20 @@ func checkUser(userId string) (out string, permissions bool) {
 func answer(prompt string, userId string) (out string) {
 	prompt = prunePrompt(prompt)
 	//完全匹配，直接返回
-	if f, ok := ExtensionExactMatchReturnOutcome[prompt]; ok {
+	if f, ok := ExtensionExactMatchReturnOutcome.GetFunc(prompt); ok {
 		return f(prompt, userId)
 	}
 	//前缀匹配，直接返回
-	if f, ok := getFuncFromPrefixMatchMap(ExtensionPrefixMatchReturnOutcome, prompt); ok {
+	if f, ok := getFuncFromPrefixMatchMap(ExtensionPrefixMatchReturnOutcome.GetFuncs(), prompt); ok {
 		return f(prompt, userId)
 	}
 	//完全匹配，修饰prompt
-	if f, ok := ExtensionExactMatchReturnPrompt[prompt]; ok {
+	if f, ok := ExtensionExactMatchReturnPrompt.GetFunc(prompt); ok {
 		newPrompt := f(prompt, userId)
 		return answerByGpt(newPrompt, userId)
 	}
 	//前缀匹配，修饰prompt
-	if f, ok := getFuncFromPrefixMatchMap(ExtensionPrefixMatchReturnPrompt, prompt); ok {
+	if f, ok := getFuncFromPrefixMatchMap(ExtensionPrefixMatchReturnPrompt.GetFuncs(), prompt); ok {
 		newPrompt := f(prompt, userId)
 		return answerByGpt(newPrompt, userId)
 	}
